@@ -86,3 +86,6 @@ py -m pip install -r ia/requirements.txt
 Disponibilize o modelo treinado em `ia/bert_model2/`, incluindo `config.json`, `model.safetensors`, os arquivos do tokenizer e `label_encoder.pkl`. Os modelos e checkpoints não estão incluídos no repositório; é necessário obtê-los separadamente ou treiná-los. Sem esses arquivos, as demais funcionalidades podem ser executadas, mas a classificação de sintomas não funcionará.
 
 O backend usa `py` por padrão. Para utilizar outro executável ou um ambiente virtual, defina `PYTHON_EXECUTABLE` em `backend/.env` com o caminho do Python que possui as dependências instaladas.
+
+![Tela de agendamento](./images/appointment.png)
+![Tela da clínica](./images/clinic.png)
