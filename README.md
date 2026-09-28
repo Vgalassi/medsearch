@@ -3,6 +3,10 @@
 O MedSearch é um projeto para busca e agendamento de consultas médicas. A plataforma conecta pacientes, médicos e clínicas, com gerenciamento de agendas, consultas presenciais e por videochamada, notificações e busca de especialidades a partir de sintomas com inteligência artificial.
 O projeto utiliza Next.js e React no frontend, Node.js com Fastify e Prisma no backend, PostgreSQL como banco de dados e Python com um modelo BERT para classificação de sintomas.
 
+![Tela de agendamento](./images/appointment.png)
+![Tela da clínica](./images/clinic.png)
+
+
 ## Pré-requisitos
 
 - Node.js 22 (a partir de 22.12) ou 24, com npm.
@@ -87,5 +91,3 @@ Disponibilize o modelo treinado em `ia/bert_model2/`, incluindo `config.json`, `
 
 O backend usa `py` por padrão. Para utilizar outro executável ou um ambiente virtual, defina `PYTHON_EXECUTABLE` em `backend/.env` com o caminho do Python que possui as dependências instaladas.
 
-![Tela de agendamento](./images/appointment.png)
-![Tela da clínica](./images/clinic.png)
