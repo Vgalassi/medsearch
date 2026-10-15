@@ -5,6 +5,7 @@ import { Doctor } from "@/components/types/Doctor";
 import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import   AppointmentDaysCard from "@/components/ui/AppointmentDaysCard";
 
 type SchedulingResponse = {
   settings: {
@@ -51,6 +52,9 @@ function monthLabel(value: string) {
   }).format(new Date(value));
 }
 
+
+
+
 function addDuration(time: string, duration: string) {
   const [hour, minute] = time.split(":").map(Number);
   const [durationHour, durationMinute] = duration.split(":").map(Number);
@@ -69,6 +73,8 @@ function addDuration(time: string, duration: string) {
 }
 
 export default function AppointmentPage() {
+
+
   const params = useParams<{ id: string; appointment: string }>();
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -86,8 +92,43 @@ export default function AppointmentPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleDateSelection = (day: string) => {
+      setSelectedDay(day);
+        async function fetchHours() {
+          setIsFetchingHours(true);
+          setError(null);
+          setSelectedHour(null);
+          setSelectedType("OFFLINE");
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/doctors/days/hours/${doctorId}`,
+              {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ date: dateKey(day) }),
+              },
+            );
+            const data = await response.json();
+    
+            if (!response.ok) {
+              throw new Error(data.message ?? "Não foi possível carregar horários");
+            }
+    
+            setHours(data.hours ?? []);
+          } catch (err) {
+            setHours([]);
+            setError(err instanceof Error ? err.message : "Erro inesperado");
+          } finally {
+            setIsFetchingHours(false);
+          }
+        }
+    
+        fetchHours();
+  }
+  
   useEffect(() => {
-    if (!doctorId || loading) return;
+    if (!doctorId || loading ) return;
 
     async function fetchInitialData() {
       try {
@@ -125,43 +166,48 @@ export default function AppointmentPage() {
     fetchInitialData();
   }, [doctorId, loading]);
 
-  useEffect(() => {
-    if (!doctorId || !selectedDay) return;
-    const day = selectedDay;
 
-    async function fetchHours() {
-      setIsFetchingHours(true);
-      setError(null);
-      setSelectedHour(null);
-      setSelectedType("OFFLINE");
 
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/doctors/days/hours/${doctorId}`,
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ date: dateKey(day) }),
-          },
-        );
-        const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.message ?? "Não foi possível carregar horários");
-        }
-
-        setHours(data.hours ?? []);
-      } catch (err) {
-        setHours([]);
-        setError(err instanceof Error ? err.message : "Erro inesperado");
-      } finally {
-        setIsFetchingHours(false);
-      }
-    }
-
-    fetchHours();
-  }, [doctorId, selectedDay]);
+  // useEffect(() => {
+  //         if(selectedDay == null){
+  //           return
+  //         }
+  //         const day = selectedDay;
+  //         async function fetchHours() {
+  //           setIsFetchingHours(true);
+  //           setError(null);
+  //           setSelectedHour(null);
+  //           setSelectedType("OFFLINE");
+      
+  //           try {
+  //             const response = await fetch(
+  //               `${API_BASE_URL}/doctors/days/hours/${doctorId}`,
+  //               {
+  //                 method: "POST",
+  //                 credentials: "include",
+  //                 headers: { "Content-Type": "application/json" },
+  //                 body: JSON.stringify({ date: dateKey(day) }),
+  //               },
+  //             );
+  //             const data = await response.json();
+      
+  //             if (!response.ok) {
+  //               throw new Error(data.message ?? "Não foi possível carregar horários");
+  //             }
+      
+  //             setHours(data.hours ?? []);
+  //           } catch (err) {
+  //             setHours([]);
+  //             setError(err instanceof Error ? err.message : "Erro inesperado");
+  //           } finally {
+  //             setIsFetchingHours(false);
+  //           }
+  //         }
+      
+  //         fetchHours();
+  //       }, [doctorId, selectedDay]);
+ 
 
   const groupedDays = useMemo(() => {
     return days.reduce<Record<string, string[]>>((groups, day) => {
@@ -265,33 +311,8 @@ export default function AppointmentPage() {
               </div>
             )}
 
-            <div className="mt-5 space-y-5">
-              {Object.entries(groupedDays).map(([month, monthDays]) => (
-                <div className="surface p-5" key={month}>
-                  <h3 className="text-lg font-bold capitalize text-slate-950">
-                    {month}
-                  </h3>
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                    {monthDays.map((day) => (
-                      <button
-                        className={`rounded-md border px-4 py-3 text-left text-sm font-semibold transition cursor-pointer ${
-                          selectedDay === day
-                            ? "border-teal-700 bg-teal-700 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800"
-                        }`}
-                        key={day}
-                        onClick={() => setSelectedDay(day)}
-                        type="button"
-                      >
-                        {formatDay(day,"short")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <AppointmentDaysCard groupedDays={groupedDays} selectedDay={selectedDay} handleDateSelection={handleDateSelection}></AppointmentDaysCard>
           </div>
-
           <aside className="surface p-5">
             <p className="section-kicker">Horários</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">

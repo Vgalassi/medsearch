@@ -42,12 +42,13 @@ y = df["speciality"]
 
 
 # ============================================================
-# 3. ENCODER DAS ESPECIALIDADES
+# 3. ENCODER DAS ESPECIALIDADES (transforma especialidade em número)
 # ============================================================
 
 encoder = LabelEncoder()
 
 y = encoder.fit_transform(y)
+
 
 print("\nEspecialidades:")
 for i, speciality in enumerate(encoder.classes_):
@@ -60,6 +61,8 @@ print("\nTotal de classes:", len(encoder.classes_))
 # 4. TRAIN / TEST SPLIT
 # ============================================================
 
+
+//Divisão 0.20 teste e 0.8 treinamento
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -77,6 +80,7 @@ print("Teste:", len(X_test))
 # 5. MODELO BERT
 # ============================================================
 
+#Carregando modelo berti 
 MODEL_NAME = "neuralmind/bert-base-portuguese-cased"
 
 tokenizer = AutoTokenizer.from_pretrained(
@@ -241,14 +245,18 @@ training_args = TrainingArguments(
 
     save_strategy="epoch",
 
+    #Taxa de aprendizado
     learning_rate=2e-5,
 
+    #Batch size
     per_device_train_batch_size=16,
 
     per_device_eval_batch_size=16,
 
+    #Num de épocas
     num_train_epochs=3,
 
+    #Decai de peso
     weight_decay=0.01,
 
     warmup_ratio=0.1,
@@ -274,9 +282,7 @@ training_args = TrainingArguments(
 # ============================================================
 
 trainer = Trainer(
-
     model=model,
-
     args=training_args,
 
     train_dataset=train_dataset,
