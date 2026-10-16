@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import   AppointmentDaysCard from "@/components/ui/AppointmentDaysCard";
+import { formatDay } from "@/components/utils/formatDay";
+import  AppointmentHoursCard from "@/components/ui/AppointmentHoursCard";
 
 type SchedulingResponse = {
   settings: {
@@ -16,13 +18,13 @@ type SchedulingResponse = {
 type AppointmentType = "ONLINE" | "OFFLINE";
 type AvailabilityMode = AppointmentType | "BOTH";
 
-type AvailableHour = {
+export type AvailableHour = {
   startTime: string;
   endTime: string;
   mode: AvailabilityMode;
 };
 
-const modeLabels: Record<AvailabilityMode, string> = {
+export const modeLabels: Record<AvailabilityMode, string> = {
   ONLINE: "Online",
   OFFLINE: "Presencial",
   BOTH: "Presencial ou Online",
@@ -37,13 +39,7 @@ function dateKey(value: string) {
   return new Date(value).toISOString().slice(0, 10);
 }
 
-function formatDay(value: string, lenght: "short" | "long" | "narrow" | undefined) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    weekday: lenght,
-    day: "2-digit",
-    timeZone: "UTC"
-  }).format(new Date(value));
-}
+
 
 function monthLabel(value: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -79,7 +75,6 @@ export default function AppointmentPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const doctorId = params?.appointment;
-
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [days, setDays] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -127,6 +122,12 @@ export default function AppointmentPage() {
         fetchHours();
   }
   
+  const handleHourSelection = (hour: AvailableHour) => {
+    setSelectedHour(hour);
+    setSelectedType(hour.mode === "ONLINE" ? "ONLINE" : "OFFLINE");
+  }
+
+
   useEffect(() => {
     if (!doctorId || loading ) return;
 
@@ -167,47 +168,6 @@ export default function AppointmentPage() {
   }, [doctorId, loading]);
 
 
-
-
-  // useEffect(() => {
-  //         if(selectedDay == null){
-  //           return
-  //         }
-  //         const day = selectedDay;
-  //         async function fetchHours() {
-  //           setIsFetchingHours(true);
-  //           setError(null);
-  //           setSelectedHour(null);
-  //           setSelectedType("OFFLINE");
-      
-  //           try {
-  //             const response = await fetch(
-  //               `${API_BASE_URL}/doctors/days/hours/${doctorId}`,
-  //               {
-  //                 method: "POST",
-  //                 credentials: "include",
-  //                 headers: { "Content-Type": "application/json" },
-  //                 body: JSON.stringify({ date: dateKey(day) }),
-  //               },
-  //             );
-  //             const data = await response.json();
-      
-  //             if (!response.ok) {
-  //               throw new Error(data.message ?? "Não foi possível carregar horários");
-  //             }
-      
-  //             setHours(data.hours ?? []);
-  //           } catch (err) {
-  //             setHours([]);
-  //             setError(err instanceof Error ? err.message : "Erro inesperado");
-  //           } finally {
-  //             setIsFetchingHours(false);
-  //           }
-  //         }
-      
-  //         fetchHours();
-  //       }, [doctorId, selectedDay]);
- 
 
   const groupedDays = useMemo(() => {
     return days.reduce<Record<string, string[]>>((groups, day) => {
@@ -313,53 +273,8 @@ export default function AppointmentPage() {
 
           <AppointmentDaysCard groupedDays={groupedDays} selectedDay={selectedDay} handleDateSelection={handleDateSelection}></AppointmentDaysCard>
           </div>
-          <aside className="surface p-5">
-            <p className="section-kicker">Horários</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">
-              {selectedDay ? formatDay(selectedDay,"long") : "Selecione um dia"}
-            </h2>
+          <AppointmentHoursCard selectedDay={selectedDay} isFetchingHours={isFetchingHours} hours={hours} selectedHour={selectedHour} handleHourSelection={handleHourSelection}></AppointmentHoursCard> 
 
-            {isFetchingHours && (
-              <p className="mt-5 rounded-md border border-teal-100 bg-teal-50 px-4 py-3 text-teal-800">
-                Carregando horários...
-              </p>
-            )}
-
-            {!isFetchingHours && selectedDay && hours.length === 0 && (
-              <p className="mt-5 text-sm text-slate-600">
-                Nenhum horário disponível para este dia.
-              </p>
-            )}
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              {hours.map((hour,index) => (
-                <button
-                  className={`rounded-md border px-4 py-3 text-left transition cursor-pointer ${
-                    selectedHour?.startTime === hour.startTime
-                      ? "border-teal-700 bg-teal-700 text-white"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-teal-200 hover:bg-teal-50"
-                  }`}
-                  key={index}
-                  onClick={() => {
-                    setSelectedHour(hour);
-                    setSelectedType(hour.mode === "ONLINE" ? "ONLINE" : "OFFLINE");
-                  }}
-                  type="button"
-                >
-                  <span className="block text-sm font-bold">{hour.startTime}</span>
-                  <span className={`mt-2 inline-flex rounded-md px-2 py-1 text-xs font-semibold ${
-                    hour.mode === "ONLINE"
-                      ? "bg-sky-50 text-sky-700"
-                      : hour.mode === "OFFLINE"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-amber-50 text-amber-700"
-                  }`}>
-                    {modeLabels[hour.mode]}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </aside>
         </section>
 
         {selectedHour && selectedDay && (

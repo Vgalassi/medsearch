@@ -1,18 +1,11 @@
-import { useEffect,useState } from "react";
-import { API_BASE_URL } from "../appConfig";
+import { formatDay } from "../utils/formatDay";
 type AppointmentDaysCardProps = {
   groupedDays: Record<string, string[]>;
   selectedDay: string | null;
   handleDateSelection: (day: string) => void;
 };
 
-function formatDay(value: string, lenght: "short" | "long" | "narrow" | undefined) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    weekday: lenght,
-    day: "2-digit",
-    timeZone: "UTC"
-  }).format(new Date(value));
-}
+
 
 
 export default function AppointmentDaysCard({groupedDays,selectedDay,handleDateSelection}: AppointmentDaysCardProps){
