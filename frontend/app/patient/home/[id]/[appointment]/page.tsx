@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import   AppointmentDaysCard from "@/components/ui/AppointmentDaysCard";
 import { formatDay } from "@/components/utils/formatDay";
 import  AppointmentHoursCard from "@/components/ui/AppointmentHoursCard";
+import { AppointmentConfirmationModal } from "@/components/ui/AppointmentConfimationModal";
 
 type SchedulingResponse = {
   settings: {
@@ -15,7 +16,7 @@ type SchedulingResponse = {
   } | null;
 };
 
-type AppointmentType = "ONLINE" | "OFFLINE";
+export type AppointmentType = "ONLINE" | "OFFLINE";
 type AvailabilityMode = AppointmentType | "BOTH";
 
 export type AvailableHour = {
@@ -30,15 +31,11 @@ export const modeLabels: Record<AvailabilityMode, string> = {
   BOTH: "Presencial ou Online",
 };
 
-const typeLabels: Record<AppointmentType, string> = {
-  ONLINE: "Online",
-  OFFLINE: "Presencial",
-};
+
 
 function dateKey(value: string) {
   return new Date(value).toISOString().slice(0, 10);
 }
-
 
 
 function monthLabel(value: string) {
@@ -47,8 +44,6 @@ function monthLabel(value: string) {
     year: "numeric",
   }).format(new Date(value));
 }
-
-
 
 
 function addDuration(time: string, duration: string) {
@@ -80,7 +75,7 @@ export default function AppointmentPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [hours, setHours] = useState<AvailableHour[]>([]);
   const [selectedHour, setSelectedHour] = useState<AvailableHour | null>(null);
-  const [selectedType, setSelectedType] = useState<AppointmentType>("OFFLINE");
+ 
   const [defaultDuration, setDefaultDuration] = useState("00:30");
   const [isFetchingDays, setIsFetchingDays] = useState(true);
   const [isFetchingHours, setIsFetchingHours] = useState(false);
@@ -93,7 +88,7 @@ export default function AppointmentPage() {
           setIsFetchingHours(true);
           setError(null);
           setSelectedHour(null);
-          setSelectedType("OFFLINE");
+        
           try {
             const response = await fetch(
               `${API_BASE_URL}/doctors/days/hours/${doctorId}`,
@@ -124,7 +119,10 @@ export default function AppointmentPage() {
   
   const handleHourSelection = (hour: AvailableHour) => {
     setSelectedHour(hour);
-    setSelectedType(hour.mode === "ONLINE" ? "ONLINE" : "OFFLINE");
+  }
+
+  const handleCloseModal = () =>{
+    setSelectedHour(null)
   }
 
 
@@ -177,7 +175,7 @@ export default function AppointmentPage() {
     }, {});
   }, [days]);
 
-  async function createAppointment() {
+  async function createAppointment(selectedType: AppointmentType) {
     if (!doctorId || !selectedDay || !selectedHour) return;
     if (loading) return;
     if (user?.role !== "PATIENT" || !user.profileId) {
@@ -278,54 +276,7 @@ export default function AppointmentPage() {
         </section>
 
         {selectedHour && selectedDay && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-            <div className="surface w-full max-w-md p-6 shadow-xl">
-              <p className="section-kicker">Confirmar consulta</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">
-                Agendar para {selectedHour.startTime}?
-              </h2>
-              <p className="mt-3 text-slate-600">
-                A consulta será criada para {formatDay(selectedDay,"long")} com{" "}
-                {doctor?.name ?? "este médico"}.
-              </p>
-              {selectedHour.mode === "BOTH" ? (
-                <label className="mt-5 block">
-                  <span className="label">Tipo de consulta</span>
-                  <select
-                    className="input"
-                    onChange={(event) =>
-                      setSelectedType(event.target.value as AppointmentType)
-                    }
-                    value={selectedType}
-                  >
-                    <option value="OFFLINE">Presencial</option>
-                    <option value="ONLINE">Online</option>
-                  </select>
-                </label>
-              ) : (
-                <p className="mt-5 inline-flex rounded-md bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-700">
-                  {typeLabels[selectedType]}
-                </p>
-              )}
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <button
-                  className="btn-secondary cursor-pointer"
-                  onClick={() => setSelectedHour(null)}
-                  type="button"
-                >
-                  Voltar
-                </button>
-                <button
-                  className="btn-primary cursor-pointer"
-                  disabled={isCreating}
-                  onClick={createAppointment}
-                  type="button"
-                >
-                  {isCreating ? "Agendando..." : "Confirmar"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <AppointmentConfirmationModal selectedDay={selectedDay} selectedHour={selectedHour} doctor={doctor} isCreating={isCreating} createAppointment={createAppointment} handleCloseModal={handleCloseModal} ></AppointmentConfirmationModal>
         )}
       </div>
     </main>
