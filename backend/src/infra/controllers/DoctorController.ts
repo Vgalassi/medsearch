@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../../app/dto/types";
 import { GetAllDoctorsUseCase } from "../../app/usecases/GetAllDoctorsUseCase";
+import { GetDoctorByIdUseCase } from "../../app/usecases/GetDoctorByIdUseCase";
 import { GetDoctorAvailableDaysUseCase } from "../../app/usecases/GetDoctorAvailableDaysUsecase";
 import {
   doctorAvailableHoursSchema,
@@ -54,6 +55,8 @@ export class DoctorController {
   constructor(
     @inject(TYPES.GetAllDoctorsUseCase)
     private readonly getAllDoctorsUseCase: GetAllDoctorsUseCase,
+    @inject(TYPES.GetDoctorByIdUseCase)
+    private readonly getDoctorByIdUseCase: GetDoctorByIdUseCase,
     @inject(TYPES.GetDoctorAvailableDaysUseCase)
     private readonly getDoctorAvailableDaysUseCase: GetDoctorAvailableDaysUseCase,
     @inject(TYPES.GetDoctorAvailableHoursUseCase)
@@ -77,6 +80,23 @@ export class DoctorController {
         speciality: doctor.props.speciality,
         clinicId: doctor.props.clinicId?.value ?? null,
       })),
+    });
+  }
+
+  async getById(req: FastifyRequest, res: FastifyReply) {
+    const params = doctorIdParamSchema.parse(req.params);
+    const doctor = await this.getDoctorByIdUseCase.execute(params.id);
+
+    return res.status(200).send({
+      doctor: {
+        id: doctor.id.value,
+        userId: doctor.props.userId.value,
+        name: doctor.props.name,
+        phone: doctor.props.phone.value,
+        crm: doctor.props.crm,
+        speciality: doctor.props.speciality,
+        clinicId: doctor.props.clinicId?.value ?? null,
+      },
     });
   }
 

@@ -6,7 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import   AppointmentDaysCard from "@/components/ui/AppointmentDaysCard";
-import { formatDay } from "@/components/utils/formatDay";
 import  AppointmentHoursCard from "@/components/ui/AppointmentHoursCard";
 import { AppointmentConfirmationModal } from "@/components/ui/AppointmentConfimationModal";
 
@@ -75,7 +74,6 @@ export default function AppointmentPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [hours, setHours] = useState<AvailableHour[]>([]);
   const [selectedHour, setSelectedHour] = useState<AvailableHour | null>(null);
- 
   const [defaultDuration, setDefaultDuration] = useState("00:30");
   const [isFetchingDays, setIsFetchingDays] = useState(true);
   const [isFetchingHours, setIsFetchingHours] = useState(false);
@@ -131,16 +129,16 @@ export default function AppointmentPage() {
 
     async function fetchInitialData() {
       try {
-        const [doctorsResponse, daysResponse, schedulingResponse] =
+        const [doctorResponse, daysResponse, schedulingResponse] =
           await Promise.all([
-            fetch(`${API_BASE_URL}/doctors/all`),
+            fetch(`${API_BASE_URL}/doctors/${doctorId}`),
             fetch(`${API_BASE_URL}/doctors/days/${doctorId}`, {
               credentials: "include",
             }),
             fetch(`${API_BASE_URL}/doctors/${doctorId}/scheduling`),
           ]);
 
-        const doctorsData = await doctorsResponse.json();
+        const doctorData = await doctorResponse.json();
         const daysData = await daysResponse.json();
         const schedulingData =
           (await schedulingResponse.json()) as SchedulingResponse;
@@ -148,11 +146,11 @@ export default function AppointmentPage() {
         if (!daysResponse.ok) {
           throw new Error(daysData.message ?? "Não foi possível carregar dias");
         }
+        if (!doctorResponse.ok) {
+          throw new Error(doctorData.message ?? "Não foi possível carregar médico");
+        }
 
-        setDoctor(
-          doctorsData.doctors?.find((item: Doctor) => item.id === doctorId) ??
-            null,
-        );
+        setDoctor((doctorData.doctor as Doctor | undefined) ?? null);
         setDays(daysData.days ?? []);
         setDefaultDuration(schedulingData.settings?.defaultDuration ?? "00:30");
       } catch (err) {

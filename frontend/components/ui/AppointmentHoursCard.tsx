@@ -19,7 +19,6 @@ export default function AppointmentHoursCard({selectedDay,isFetchingHours,hours,
             <h2 className="mt-2 text-2xl font-bold text-slate-950">
               {selectedDay ? formatDay(selectedDay,"long") : "Selecione um dia"}
             </h2>
-
             {isFetchingHours && (
               <p className="mt-5 rounded-md border border-teal-100 bg-teal-50 px-4 py-3 text-teal-800">
                 Carregando horários...

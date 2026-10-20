@@ -3,6 +3,7 @@ import { DoctorController } from "../controllers/DoctorController";
 import { container } from "../di/container";
 import { TYPES } from "../../app/dto/types";
 import { GetAllDoctorsUseCase } from "../../app/usecases/GetAllDoctorsUseCase";
+import { GetDoctorByIdUseCase } from "../../app/usecases/GetDoctorByIdUseCase";
 import { GetDoctorAvailableDaysUseCase } from "../../app/usecases/GetDoctorAvailableDaysUsecase";
 import { GetDoctorAvailableHoursUseCase } from "../../app/usecases/GetAvailableHoursUseCase";
 import { GetDoctorSchedulingUseCase } from "../../app/usecases/GetDoctorSchedulingUseCase";
@@ -10,6 +11,9 @@ import { UpdateDoctorSchedulingUseCase } from "../../app/usecases/UpdateDoctorSc
 
 const getAllDoctorsUseCase = container.get<GetAllDoctorsUseCase>(
   TYPES.GetAllDoctorsUseCase,
+);
+const getDoctorByIdUseCase = container.get<GetDoctorByIdUseCase>(
+  TYPES.GetDoctorByIdUseCase,
 );
 const getDoctorAvailableDaysUseCase =
   container.get<GetDoctorAvailableDaysUseCase>(
@@ -31,6 +35,7 @@ const updateDoctorSchedulingUseCase =
 
 const doctorController = new DoctorController(
   getAllDoctorsUseCase,
+  getDoctorByIdUseCase,
   getDoctorAvailableDaysUseCase,
   getDoctorAvailableHoursUseCase,
   getDoctorSchedulingUseCase,
@@ -40,6 +45,10 @@ const doctorController = new DoctorController(
 export default async function doctorRoutes(app: FastifyInstance) {
   app.get("/doctors/all", async (req: FastifyRequest, res: FastifyReply) => {
     await doctorController.getAll(req, res);
+  });
+
+  app.get("/doctors/:id", async (req: FastifyRequest, res: FastifyReply) => {
+    await doctorController.getById(req, res);
   });
 
   app.get("/doctors/available", async (req: FastifyRequest, res: FastifyReply) => {

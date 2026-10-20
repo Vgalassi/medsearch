@@ -18,6 +18,7 @@ import { GetClinicDoctorsUseCase } from "../../app/usecases/GetClinicDoctorsUseC
 import { GetAllClinicsUseCase } from "../../app/usecases/GetAllClinicsUseCase";
 import { FindClinicByIdUseCase } from "../../app/usecases/FindClinicByIdUseCase";
 import { GetAllDoctorsUseCase } from "../../app/usecases/GetAllDoctorsUseCase";
+import { GetDoctorByIdUseCase } from "../../app/usecases/GetDoctorByIdUseCase";
 import { GetDoctorAvailableDaysUseCase } from "../../app/usecases/GetDoctorAvailableDaysUsecase";
 import type { AppointmentRepository } from "../../domain/repositories/AppointmentRepository";
 import { PrismaAppointmentRepository } from "../repositories/PrismaAppointmentRepository";
@@ -59,6 +60,7 @@ container.bind<GetClinicDoctorsUseCase>(TYPES.GetClinicDoctorsUseCase).to(GetCli
 container.bind<GetAllClinicsUseCase>(TYPES.GetAllClinicsUseCase).to(GetAllClinicsUseCase)
 container.bind<FindClinicByIdUseCase>(TYPES.FindClinicByIdUseCase).to(FindClinicByIdUseCase)
 container.bind<GetAllDoctorsUseCase>(TYPES.GetAllDoctorsUseCase).to(GetAllDoctorsUseCase)
+container.bind<GetDoctorByIdUseCase>(TYPES.GetDoctorByIdUseCase).to(GetDoctorByIdUseCase)
 container
   .bind<GetDoctorAvailableDaysUseCase>(TYPES.GetDoctorAvailableDaysUseCase)
   .to(GetDoctorAvailableDaysUseCase);

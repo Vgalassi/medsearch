@@ -13,6 +13,7 @@ export const TYPES = {
     GetAllClinicsUseCase: Symbol.for("GetAllClinicsUseCase"),
     FindClinicByIdUseCase: Symbol.for("FindClinicByIdUseCase"),
     GetAllDoctorsUseCase: Symbol.for("GetAllDoctorsUseCase"),
+    GetDoctorByIdUseCase: Symbol.for("GetDoctorByIdUseCase"),
     GetDoctorAvailableDaysUseCase: Symbol.for("GetDoctorAvailableDaysUseCase"),
     GetDoctorAvailableHoursUseCase: Symbol.for("GetDoctorAvailableHoursUseCase"),
     GetDoctorSchedulingUseCase: Symbol.for("GetDoctorSchedulingUseCase"),
