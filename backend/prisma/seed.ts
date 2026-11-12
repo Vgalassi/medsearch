@@ -446,9 +446,6 @@ async function findClinicIdByEmail(email: string): Promise<string> {
 async function main() {
   const registerUserUseCase = new RegisterUserUseCase(
     container.get(TYPES.UserRepository),
-    container.get(TYPES.DoctorRepository),
-    container.get(TYPES.PatientRepository),
-    container.get(TYPES.ClinicRepository),
     container.get(TYPES.HashGenerator),
     new SeedCepService(),
     new SeedGeocodingService(),

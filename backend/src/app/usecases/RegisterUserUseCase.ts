@@ -3,11 +3,8 @@ import type { UseCase } from "../../domain/value-objects/UseCase";
 import type { RegisterUserDto } from "../dto/RegisterUserDto";
 import { inject, injectable } from "inversify";
 import { TYPES } from "../dto/types";
-import type { UserRepository } from "../../domain/repositories/UserRepository";
+import type { UserProfile, UserRepository } from "../../domain/repositories/UserRepository";
 import type { HashGenerator } from "../protocols/HashGenerator";
-import type { DoctorRepository } from "../../domain/repositories/DoctorRepository";
-import type { PatientRepository } from "../../domain/repositories/PatientRepository";
-import type { ClinicRepository } from "../../domain/repositories/ClinicRepository";
 import { Identifier } from "../../domain/value-objects/Identifier";
 import { User as UserAggregate } from "../../domain/Aggregates/User";
 import { Doctor } from "../../domain/Aggregates/Doctor";
@@ -16,6 +13,7 @@ import { Clinic } from "../../domain/Aggregates/Clinic";
 import { Email } from "../../domain/value-objects/Email";
 import { PhoneNumber } from "../../domain/value-objects/PhoneNumber";
 import { CPF } from "../../domain/value-objects/Cpf";
+import { UserAlreadyExistsError } from "../../domain/errors/UserAlreadyExistsError";
 import type { CepService } from "../protocols/CepService";
 import type { GeocodingService } from "../protocols/GeocodingService";
 
@@ -23,9 +21,6 @@ import type { GeocodingService } from "../protocols/GeocodingService";
 export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User>>{
     constructor(
         @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
-        @inject(TYPES.DoctorRepository) private readonly doctorRepository: DoctorRepository,
-        @inject(TYPES.PatientRepository) private readonly patientRepository: PatientRepository,
-        @inject(TYPES.ClinicRepository) private readonly clinicRepository: ClinicRepository,
         @inject(TYPES.HashGenerator) private readonly hashGenerator: HashGenerator,
         @inject(TYPES.CepService) private readonly CepService: CepService,
         @inject(TYPES.GeocodingService) private readonly GeocodingService: GeocodingService
@@ -34,10 +29,9 @@ export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User
     async execute(input: RegisterUserDto): Promise<User> {
         const email = new Email(input.email);
         const phone = new PhoneNumber(input.phone);
-
         const userAlreadyExists = await this.userRepository.findByEmail(email);
         if (userAlreadyExists) {
-            throw new Error("User already exists");
+            throw new UserAlreadyExistsError();
         }
 
         const passwordHash = await this.hashGenerator.hash(input.password);
@@ -50,19 +44,23 @@ export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User
             new Identifier(),
         );
 
-        const createdUser = await this.userRepository.save(user);
+        // Build and validate the profile before persisting anything; user and
+        // profile are then saved atomically so a failure never leaves an orphan user.
+        const profile = await this.buildProfile(input, user, phone);
+        return this.userRepository.saveWithProfile(user, profile);
+    }
 
+    private async buildProfile(input: RegisterUserDto, user: User, phone: PhoneNumber): Promise<UserProfile> {
         if (input.role === "DOCTOR") {
             if (!input.crm || !input.speciality) {
                 throw new Error("Doctor data is required");
             }
 
-
-            const doctor = Doctor.create(
+            return Doctor.create(
                 {
-                    userId: createdUser.id,
+                    userId: user.id,
                     name: input.name,
-                    phone: new PhoneNumber(input.phone),
+                    phone,
                     crm: input.crm,
                     speciality: input.speciality,
                     ...(input.clinicId ? { clinicId: new Identifier(input.clinicId) } : {}),
@@ -71,9 +69,6 @@ export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User
                 },
                 new Identifier(),
             );
-
-            await this.doctorRepository.save(doctor);
-            return createdUser;
         }
 
         if (input.role === "PATIENT") {
@@ -81,29 +76,26 @@ export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User
                 throw new Error("Patient data is required");
             }
 
-            const patient = new Patient(
+            return new Patient(
                 {
-                    userId: createdUser.id,
+                    userId: user.id,
                     name: input.name,
                     phone,
-                    cpf: new CPF(input.cpf),
+                    cpf: new CPF(input.cpf)
                 },
                 new Identifier(),
             );
-
-            await this.patientRepository.save(patient);
-            return createdUser;
         }
 
         if (!input.cep  || !input.description || !input.number) {
             throw new Error("Clinic data is required");
         }
-        
+
         let address = await this.CepService.findAddress(input.cep,input.number)
         address = await this.GeocodingService.getCoordinates(address)
-        const clinic = new Clinic(
+        return new Clinic(
             {
-                userId: createdUser.id,
+                userId: user.id,
                 name: input.name,
                 phone,
                 address: address,
@@ -111,8 +103,5 @@ export class RegisterUserUseCase implements UseCase<RegisterUserDto,Promise<User
             },
             new Identifier(),
         );
-
-        await this.clinicRepository.save(clinic);
-        return createdUser;
     }
 }

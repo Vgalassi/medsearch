@@ -14,6 +14,7 @@ import type { FastifyInstance } from "fastify";
 import { UnauthorizedError } from "../../domain/errors/UnauthorizedError.js";
 import { LowConfidenceClassificationError } from "../../domain/errors/LowConfidenceClassificationError.js";
 import { PatientAlreadyHasScheduledAppointmentError } from "../../domain/errors/PatientAlreadyHasScheduledAppointmentError.js";
+import { UserAlreadyExistsError } from "../../domain/errors/UserAlreadyExistsError.js";
 
 
 export function setupErrorHandler(app: FastifyInstance){
@@ -39,7 +40,10 @@ export function setupErrorHandler(app: FastifyInstance){
             return reply.status(422).send({ message: error.message });
         }
 
-        if (error instanceof PatientAlreadyHasScheduledAppointmentError) {
+        if (
+            error instanceof PatientAlreadyHasScheduledAppointmentError ||
+            error instanceof UserAlreadyExistsError
+        ) {
             return reply.status(409).send({ message: error.message });
         }
 
