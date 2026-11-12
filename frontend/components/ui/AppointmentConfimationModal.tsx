@@ -19,7 +19,7 @@ type AppointmentConfimatiomModalProps = {
 }
 
 export function AppointmentConfirmationModal({selectedDay, selectedHour, doctor,isCreating,createAppointment, handleCloseModal }: AppointmentConfimatiomModalProps){
-    const [selectedType, setSelectedType] = useState<AppointmentType>("OFFLINE");
+    const [selectedType, setSelectedType] = useState<AppointmentType>(selectedHour.mode === "BOTH" ? "OFFLINE" : selectedHour.mode);
     return (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
         <div className="surface w-full max-w-md p-6 shadow-xl">

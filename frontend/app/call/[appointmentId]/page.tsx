@@ -293,7 +293,7 @@ export default function VideoCallPage() {
               ref={remoteVideoRef}
               autoPlay
               playsInline
-              className="h-full min-h-[420px] w-full bg-slate-900 object-cover max-h-40"
+              className="h-full min-h-105 w-full bg-slate-900 object-cover max-h-40"
             />
 
             {!remoteConnected && (
