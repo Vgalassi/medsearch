@@ -28,7 +28,7 @@ export interface AppointmentRepository {
 
   findTodayScheduledOrOcurring(today: Date): Promise<Appointment[]>;
 
-  findScheduledByDoctor(
+  findScheduledOrOcurringByDoctor(
     doctorId: string,
   ): Promise<Appointment[]>;
 

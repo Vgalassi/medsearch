@@ -25,7 +25,7 @@ export class GetDoctorAvailableHoursUseCase
     if (!doctor) {
       throw new NotfoundError("Doctor", input.doctorId);
     }
-    const appointments = await this.appointmentRepository.findScheduledByDoctor(input.doctorId)
+    const appointments = await this.appointmentRepository.findScheduledOrOcurringByDoctor(input.doctorId)
 
     const hours = getAvaliableDayTimes(appointments,input.day,doctor);
 

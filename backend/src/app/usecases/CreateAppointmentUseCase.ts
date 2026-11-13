@@ -70,7 +70,7 @@ export class CreateAppointmentUseCase {
     
     const appointmentDate = new TimeZoneDate(input.day,false)
     
-    const appointments = await this.appointmentRepository.findScheduledByDoctor(input.doctorId)
+    const appointments = await this.appointmentRepository.findScheduledOrOcurringByDoctor(input.doctorId)
     const slots = getAvaliableDayTimes(appointments,appointmentDate,doctor)
 
     const startTime = Time.createWithString(input.startTime)
