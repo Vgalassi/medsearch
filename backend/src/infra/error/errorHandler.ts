@@ -58,10 +58,6 @@ export function setupErrorHandler(app: FastifyInstance){
             return reply.status(403).send({ message: error.message})
         }
 
-        console.error(error)
-        if(error.message != undefined ){
-            reply.status(500).send({ message: error.message})
-        }
         reply.status(500).send({ message: "Erro no servidor" })
         })
     }
